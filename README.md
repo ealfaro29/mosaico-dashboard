@@ -71,6 +71,8 @@ El clima tiene un cielo según el código WMO y el indicador real de día/noche.
 
 Android 9 o anterior y dispositivos que reportan 2 GB de memoria o menos activan el modo ligero **antes de cargar el CSS**: fuentes del sistema, cielo estático, sin texturas Canvas, animaciones, filtros de hover ni desenfoque de diálogos. La distribución, colores y funciones se conservan. Puedes forzarlo en cualquier equipo con [Mosaico ligero](https://ealfaro29.github.io/mosaico-dashboard/?lite=1).
 
+La entrada utiliza un bootstrap de sintaxis ES5. Comprueba módulos, la sintaxis real del código, APIs DOM y CSS Grid y las dimensiones con min()/vh antes de solicitar el CSS o módulo del dashboard. Si faltan, abre automáticamente `frame.html` y conserva `lite=1`/`offline=1`. El enlace de recuperación también lleva a esa vista independiente. Si falla la descarga o el análisis del propio bootstrap, el HTML mantiene un enlace manual visible; no intenta cargar el dashboard por su cuenta. `?dashboard=1` permite volver a la entrada sin una redirección circular: si el motor sigue sin capacidades, muestra el enlace de recuperación y no ejecuta el módulo incompatible. Las declaraciones con dvh ya tienen alternativas con vh; por eso dvh no es obligatorio. La detección no consulta ni modifica almacenamiento.
+
 Las fuentes externas son opcionales y se solicitan después de iniciar el documento en el modo normal; no bloquean el arranque. Los identificadores y las copias de datos JSON tienen alternativas sin `crypto.randomUUID` ni `structuredClone`. Esto endurece el arranque; no implica que Firefox 159 carezca de esas funciones.
 
 Un error al abrir un widget no impide abrir los siguientes. Si no puede leerse o validarse el espacio guardado, Mosaico mantiene el original sin sobrescribirlo: muestra un aviso y permite exportarlo desde Ajustes. Importar o restablecer conserva la confirmación de reemplazo. Si el módulo inicial no llega a arrancar, aparece un enlace de reintento ligero a los ocho segundos.
@@ -84,6 +86,10 @@ Un error al abrir un widget no impide abrir los siguientes. Si no puede leerse o
 El reloj se actualiza por minuto. Después de cuatro segundos consulta clima de San José, tipo de cambio y tres titulares, una fuente a la vez, con límites de 32 KB y siete segundos. No hace consultas periódicas. [Iniciar sin consultas automáticas](https://ealfaro29.github.io/mosaico-dashboard/frame.html?offline=1&v=20261105-frame2) conserva el botón para consultar manualmente.
 
 Las notas de esta vista se guardan explícitamente con **Guardar nota**, hasta 4000 caracteres, en `mosaico:frame:note:v1`. No lee, migra, enumera ni modifica las notas, configuración o caché del dashboard anterior. No redirige a otros usuarios ni reemplaza el dashboard. Una URL nueva y una prueba de navegador no demuestran que el cierre físico haya desaparecido.
+
+La vista del marco utiliza texto de 16 px, etiquetas/estados de 13 px y controles táctiles de 44 px. Los cinco widgets caben en 1024 × 640 y se apilan en ventanas menores, con desplazamiento vertical normal. Pantalla completa se solicita solo al pulsar su botón; admite API estándar y variantes WebKit, entrada/salida y estados reales. Si el navegador la rechaza o no la ofrece, indica usar la opción del navegador; no oculta barras mediante trucos.
+
+Pruebas de entrada: `NODE_PATH=/tmp/mosaico-qa/node_modules node tests/entry-routing.cjs`. Pantalla completa: `NODE_PATH=/tmp/mosaico-qa/node_modules node tests/frame-fullscreen.cjs`. Las carencias del WebView se simulan en Chrome; no equivalen a probar la versión física de Fulguris ni a identificar su versión de WebView.
 
 Prueba específica: `NODE_PATH=/tmp/mosaico-qa/node_modules node tests/frame-independent.cjs`. Cubre arranque sin JavaScript, independencia de recursos/API del dashboard, almacenamiento previo grande e intacto, recarga de notas propias, red secuencial y respuestas fallidas, bloqueadas o excesivas.
 
