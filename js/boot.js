@@ -1,6 +1,6 @@
 /* ES5 gate: do not fetch dashboard CSS/modules until this engine passes. */
 (function () {
-  var VERSION = '20261105-entry3';
+  var VERSION = '20261105-fill4';
   var manual = /(?:\?|&)dashboard=1(?:&|$)/.test(location.search);
   var lite = /(?:\?|&)lite=1(?:&|$)/.test(location.search);
   var offline = /(?:\?|&)offline=1(?:&|$)/.test(location.search);

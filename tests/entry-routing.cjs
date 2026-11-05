@@ -50,7 +50,7 @@ async function setup(mode,extra={}) {
 }
 async function frameReady(t){
  await t.page.waitForURL(/\/frame\.html/);
- await t.page.waitForFunction(()=>document.documentElement.getAttribute('data-frame-ready')==='20261105-frame2');
+ await t.page.waitForFunction(()=>document.documentElement.getAttribute('data-frame-ready')==='20261105-fill4');
 }
 async function intact(t){
  assert.equal(await t.page.evaluate(key=>localStorage[key],OLD),previous);
@@ -75,7 +75,7 @@ async function test(name,fn){const start=Date.now();await fn();report.push({name
  for(const mode of ['modules','syntax','dom','css-grid','css-min']){
   await test('Missing '+mode+' redirects before dashboard resources and preserves storage',async()=>{
    const t=await setup(mode);await t.page.goto(base+'/?lite=1&offline=1');await frameReady(t);await intact(t);
-   const url=new URL(t.page.url());assert.equal(url.searchParams.get('offline'),'1');assert.equal(url.searchParams.get('lite'),'1');assert.equal(url.searchParams.get('v'),'20261105-entry3');
+   const url=new URL(t.page.url());assert.equal(url.searchParams.get('offline'),'1');assert.equal(url.searchParams.get('lite'),'1');assert.equal(url.searchParams.get('v'),'20261105-fill4');
    assert.equal(t.requests.some(u=>/\/style\.css|\/js\/(?:app|data|icons|extensions|compat|weather-scene)\.js/.test(u)),false);
    assert.deepEqual(t.errors,[]);await t.context.close();
   });
@@ -126,7 +126,7 @@ async function test(name,fn){const start=Date.now();await fn();report.push({name
    await t.context.close();
   });
  }
- const result={version:'20261105-entry3',browser:await browser.version(),passed:report.length,tests:report,scope:'Capability failures simulated in Chrome; physical Android WebView/Fulguris not available.'};
+ const result={version:'20261105-fill4',browser:await browser.version(),passed:report.length,tests:report,scope:'Capability failures simulated in Chrome; physical Android WebView/Fulguris not available.'};
  await fs.writeFile(path.join(qa,'entry-routing-results.json'),JSON.stringify(result,null,2));console.log(JSON.stringify({passed:report.length,browser:result.browser}));
 })().catch(async e=>{console.error(e);await fs.writeFile(path.join(qa,'entry-routing-failure.txt'),e.stack);process.exitCode=1;})
 .finally(async()=>{if(browser)await browser.close();await new Promise(r=>server.close(r));});

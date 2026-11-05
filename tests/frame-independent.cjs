@@ -68,7 +68,7 @@ async function setup(options={}) {
 }
 async function open(t,query='?offline=1'){
  await t.page.goto(base+'/frame.html'+query);
- await t.page.waitForFunction(()=>document.documentElement.getAttribute('data-frame-ready')==='20261105-frame2');
+ await t.page.waitForFunction(()=>document.documentElement.getAttribute('data-frame-ready')==='20261105-fill4');
 }
 async function update(t){
  await t.page.locator('#frame-refresh').click();
@@ -151,7 +151,7 @@ async function test(name,fn){const start=Date.now();await fn();results.push({nam
    assert.match(await t.page.locator('#frame-news-list a').getAttribute('href'),/^https:\/\/news.ycombinator.com/);
    assert.deepEqual(t.errors,[]);await t.context.close();
  });
- const report={version:'20261105-frame2',browser:await browser.version(),passed:results.length,tests:results,physicalFrameTested:false};
+ const report={version:'20261105-fill4',browser:await browser.version(),passed:results.length,tests:results,physicalFrameTested:false};
  await fs.writeFile(path.join(qa,'frame-independent-results.json'),JSON.stringify(report,null,2));console.log(JSON.stringify({passed:results.length,browser:report.browser}));
 })().catch(async e=>{console.error(e);await fs.writeFile(path.join(qa,'frame-independent-failure.txt'),e.stack);process.exitCode=1;})
 .finally(async()=>{if(browser)await browser.close();await new Promise(r=>server.close(r));});

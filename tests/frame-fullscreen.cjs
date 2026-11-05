@@ -55,7 +55,7 @@ async function test(name,fn){await fn();results.push({name,pass:true});console.l
    assert.deepEqual(await t.page.evaluate(()=>fullscreenQA()),{state:false,requests:0,exits:0});
    await t.page.locator('#frame-fullscreen').click();
    assert.equal(await t.page.locator('#frame-fullscreen').getAttribute('aria-pressed'),'true');
-   assert.match(await t.page.locator('#frame-fullscreen').textContent(),/^Salir/);
+   assert.match(await t.page.locator('#frame-fullscreen').getAttribute('aria-label'),/^Salir/);
    assert.match(await t.page.locator('#frame-fullscreen-status').textContent(),/activada/);
    await t.page.locator('#frame-fullscreen').click();
    assert.equal(await t.page.locator('#frame-fullscreen').getAttribute('aria-pressed'),'false');

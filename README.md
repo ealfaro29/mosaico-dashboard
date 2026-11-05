@@ -81,15 +81,19 @@ Un error al abrir un widget no impide abrir los siguientes. Si no puede leerse o
 
 ### Vista independiente para el marco
 
-[Abrir `frame.html`](https://ealfaro29.github.io/mosaico-dashboard/frame.html?v=20261105-frame2). Es un documento autónomo de unos 15 KB: no carga los módulos, estilos, fuentes ni motor del dashboard. Los cinco widgets y enlaces de fuentes existen en el HTML incluso sin JavaScript. Usa script clásico, tipografía del sistema y CSS simple, sin Canvas, SVG, Intl, animaciones, transformaciones, filtros o sombras.
+[Abrir `frame.html`](https://ealfaro29.github.io/mosaico-dashboard/frame.html?v=20261105-fill4). Es un documento autónomo de unos 15 KB: no carga los módulos, estilos, fuentes ni motor del dashboard. Los cinco widgets y enlaces de fuentes existen en el HTML incluso sin JavaScript. Usa script clásico, tipografía del sistema y CSS simple, sin Canvas, SVG, Intl, animaciones, transformaciones, filtros o sombras.
 
-El reloj se actualiza por minuto. Después de cuatro segundos consulta clima de San José, tipo de cambio y tres titulares, una fuente a la vez, con límites de 32 KB y siete segundos. No hace consultas periódicas. [Iniciar sin consultas automáticas](https://ealfaro29.github.io/mosaico-dashboard/frame.html?offline=1&v=20261105-frame2) conserva el botón para consultar manualmente.
+El reloj se actualiza por minuto. Después de cuatro segundos consulta clima de San José, tipo de cambio y tres titulares, una fuente a la vez, con límites de 32 KB y siete segundos. No hace consultas periódicas. [Iniciar sin consultas automáticas](https://ealfaro29.github.io/mosaico-dashboard/frame.html?offline=1&v=20261105-fill4) conserva el botón para consultar manualmente.
 
 Las notas de esta vista se guardan explícitamente con **Guardar nota**, hasta 4000 caracteres, en `mosaico:frame:note:v1`. No lee, migra, enumera ni modifica las notas, configuración o caché del dashboard anterior. No redirige a otros usuarios ni reemplaza el dashboard. Una URL nueva y una prueba de navegador no demuestran que el cierre físico haya desaparecido.
 
 La vista del marco utiliza texto de 16 px, etiquetas/estados de 13 px y controles táctiles de 44 px. Los cinco widgets caben en 1024 × 640 y se apilan en ventanas menores, con desplazamiento vertical normal. Pantalla completa se solicita solo al pulsar su botón; admite API estándar y variantes WebKit, entrada/salida y estados reales. Si el navegador la rechaza o no la ofrece, indica usar la opción del navegador; no oculta barras mediante trucos.
 
 Pruebas de entrada: `NODE_PATH=/tmp/mosaico-qa/node_modules node tests/entry-routing.cjs`. Pantalla completa: `NODE_PATH=/tmp/mosaico-qa/node_modules node tests/frame-fullscreen.cjs`. Las carencias del WebView se simulan en Chrome; no equivalen a probar la versión física de Fulguris ni a identificar su versión de WebView.
+
+La vista reparte la altura disponible entre sus dos filas y amplía las notas al crecer la ventana o entrar en pantalla completa. Recalcula en cambios de tamaño, orientación y estado; si el contenido necesita más espacio, mantiene el desplazamiento normal sin recortarlo. Los botones de actualizar y pantalla completa son iconos de 44 px con nombre accesible y tooltip. El diseño sigue usando tipografía del sistema, colores planos y bordes simples.
+
+Prueba de ajuste: `NODE_PATH=/tmp/mosaico-qa/node_modules node tests/frame-fill.cjs`.
 
 Prueba específica: `NODE_PATH=/tmp/mosaico-qa/node_modules node tests/frame-independent.cjs`. Cubre arranque sin JavaScript, independencia de recursos/API del dashboard, almacenamiento previo grande e intacto, recarga de notas propias, red secuencial y respuestas fallidas, bloqueadas o excesivas.
 
