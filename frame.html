@@ -1,0 +1,244 @@
+<!doctype html>
+<html lang="es">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <meta name="theme-color" content="#f6f5f0">
+  <meta name="mosaico-frame-version" content="20261105-frame2">
+  <title>Mosaico para el marco</title>
+  <link rel="icon" href="data:,">
+  <style>
+    html{background:#f6f5f0;color:#263d30;font-family:Arial,Helvetica,sans-serif;font-size:14px}
+    body{max-width:1024px;margin:0 auto;padding:12px;box-sizing:border-box}
+    h1{display:inline-block;font-size:25px;margin:0 16px 6px 0}h2{font-size:14px;margin:0 0 10px}
+    p{line-height:1.5;margin:8px 0}a{color:#285a40;text-decoration:underline}
+    button,textarea{font:inherit;color:inherit}button{padding:8px 12px;background:#e6eddf;border:1px solid #9eaf99}
+    button:disabled{color:#63735f;background:#eff0e9}button:focus,textarea:focus,a:focus{outline:2px solid #4b7052}
+    header{padding:4px 10px 8px}header p{font-size:12px;color:#5b695d;margin:3px 0}header button{vertical-align:top}
+    .cards:after{content:"";display:table;clear:both}
+    .card{float:left;box-sizing:border-box;width:31.33%;margin:1%;padding:12px;min-height:170px;border:1px solid #d9dfd2;background:#fffefa}
+    .wide{width:64.66%;min-height:240px}.notes{min-height:240px;background:#f3eddd}
+    .weather{background:#e4ece2}.clock{background:#e0e9e0}
+    .value{font-size:36px;font-weight:bold;line-height:1.25;margin:12px 0}.value small{font-size:20px;font-weight:normal}
+    .detail{font-size:13px}.source,.status{font-size:11px;color:#566452;line-height:1.5}
+    .status{min-height:16px}.source{margin-top:12px}ol{padding-left:20px;margin:0}li{padding:0 0 13px;line-height:1.45}
+    textarea{display:block;box-sizing:border-box;width:100%;height:74px;padding:8px;border:1px solid #c9c6b6;background:#fffcf3;resize:vertical}
+    .notes button{margin-top:6px;padding:6px 10px;font-size:12px}.notes p{font-size:11px;margin:4px 0}.notes label{font-size:11px}
+    footer{clear:both;padding:10px;font-size:11px;line-height:1.6;border-top:1px solid #d9dfd2}
+    #frame-network-status{display:inline;font-size:11px;margin-left:8px}
+    @media(max-width:650px){body{padding:8px}.card,.wide{width:98%;min-height:0}.value{font-size:32px}header{padding:8px}}
+  </style>
+</head>
+<body>
+  <header>
+    <h1>Mosaico para el marco</h1>
+    <button id="frame-refresh" type="button" disabled>Actualizar datos</button>
+    <p>Clima, hora y notas en una vista sencilla. Tus datos del dashboard completo permanecen intactos.</p>
+    <span id="frame-network-status" role="status">Los datos se consultan al conectar.</span>
+    <noscript><p>Esta vista puede leerse sin JavaScript. Abre las fuentes para consultar datos actuales; las notas escritas aquí no se guardan.</p></noscript>
+  </header>
+  <main class="cards" aria-label="Tus widgets">
+    <section class="card weather" aria-labelledby="frame-weather-heading">
+      <h2 id="frame-weather-heading">Clima · San José, Costa Rica</h2>
+      <p class="value" id="frame-weather-value">— <small>°C</small></p>
+      <p class="detail" id="frame-weather-detail">Temperatura pendiente de consulta.</p>
+      <p class="status" id="frame-weather-status" role="status">Sin actualizar.</p>
+      <p class="source"><a href="https://open-meteo.com/" rel="noreferrer">Fuente: Open-Meteo</a></p>
+    </section>
+    <section class="card" aria-labelledby="frame-exchange-heading">
+      <h2 id="frame-exchange-heading">Tipo de cambio · USD / CRC</h2>
+      <p class="value" id="frame-exchange-value">—</p>
+      <p class="detail" id="frame-exchange-detail">Referencia de compra y venta.</p>
+      <p class="status" id="frame-exchange-status" role="status">Sin actualizar.</p>
+      <p class="source"><a href="https://api.hacienda.go.cr/indicadores/tc/dolar" rel="noreferrer">Fuente: Ministerio de Hacienda</a></p>
+    </section>
+    <section class="card clock" aria-labelledby="frame-clock-heading">
+      <h2 id="frame-clock-heading">Hora de Costa Rica</h2>
+      <p class="value" id="frame-clock-value">UTC −6</p>
+      <p class="detail" id="frame-clock-date">La hora aparece al activar JavaScript.</p>
+      <p class="source">Se actualiza por minuto usando el reloj del dispositivo.</p>
+    </section>
+    <section class="card wide" aria-labelledby="frame-news-heading">
+      <h2 id="frame-news-heading">Titulares de tecnología</h2>
+      <ol id="frame-news-list"><li><a href="https://news.ycombinator.com/" rel="noreferrer">Abrir los titulares de Hacker News</a></li></ol>
+      <p class="status" id="frame-news-status" role="status">Sin actualizar. Los titulares conservan su idioma original.</p>
+      <p class="source"><a href="https://hn.algolia.com/" rel="noreferrer">Fuente: Hacker News / Algolia</a></p>
+    </section>
+    <section class="card notes" aria-labelledby="frame-notes-heading">
+      <h2 id="frame-notes-heading">Notas del marco</h2>
+      <label for="frame-note">Tu nota (hasta 4000 caracteres)</label>
+      <textarea id="frame-note" maxlength="4000" placeholder="Escribe hasta 4000 caracteres."></textarea>
+      <button id="frame-save-note" type="button" disabled>Guardar nota</button>
+      <p id="frame-note-status" role="status">Guardar requiere JavaScript.</p>
+      <p>Notas separadas; el dashboard conserva sus datos.</p>
+    </section>
+  </main>
+  <footer>
+    <a href="./">Abrir el dashboard completo</a> · Ubicación: San José, Costa Rica. Notas del marco guardadas en este navegador.
+  </footer>
+  <script>
+  (function () {
+    'use strict';
+    var NOTE_KEY = 'mosaico:frame:note:v1';
+    var MAX_NOTE = 4000, MAX_RESPONSE = 32768;
+    var refresh = document.getElementById('frame-refresh');
+    var networkStatus = document.getElementById('frame-network-status');
+    var note = document.getElementById('frame-note');
+    var noteStatus = document.getElementById('frame-note-status');
+    var saveNote = document.getElementById('frame-save-note');
+    var noteWritable = true, running = false, jobs = [], nextJob = 0;
+    var paused = false, autoPending = false, autoTimer = 0;
+    var offlineStart = /(?:\?|&)offline=1(?:&|$)/.test(location.search);
+    var days = ['domingo','lunes','martes','miércoles','jueves','viernes','sábado'];
+    var months = ['enero','febrero','marzo','abril','mayo','junio','julio','agosto','septiembre','octubre','noviembre','diciembre'];
+    function setText(id, value) { document.getElementById(id).textContent = value; }
+    function finite(value) { return typeof value === 'number' && isFinite(value); }
+    function pad(value) { return value < 10 ? '0' + value : String(value); }
+    function clock() {
+      if (document.hidden) return;
+      var date = new Date(new Date().getTime() - 21600000);
+      setText('frame-clock-value', pad(date.getUTCHours()) + ':' + pad(date.getUTCMinutes()));
+      setText('frame-clock-date', days[date.getUTCDay()] + ', ' + date.getUTCDate() + ' de ' + months[date.getUTCMonth()]);
+    }
+    try {
+      var storedNote = localStorage.getItem(NOTE_KEY);
+      if (storedNote !== null && storedNote.length > MAX_NOTE) {
+        noteWritable = false; note.disabled = true;
+        noteStatus.textContent = 'La nota guardada supera el límite y se conserva sin cambios.';
+      } else {
+        note.value = storedNote || '';
+        noteStatus.textContent = storedNote === null ? 'Pulsa Guardar nota para conservarla.' : 'Nota recuperada de este navegador.';
+      }
+    } catch (error) {
+      noteWritable = false;
+      noteStatus.textContent = 'No se puede acceder a tus notas. Puedes escribir, pero no guardar.';
+    }
+    saveNote.disabled = !noteWritable;
+    note.oninput = function () {
+      noteStatus.textContent = noteWritable ? 'Cambios sin guardar. Pulsa Guardar nota.' : 'Esta nota no se puede guardar; conserva una copia.';
+    };
+    saveNote.onclick = function () {
+      if (!noteWritable) return;
+      if (note.value.length > MAX_NOTE) { noteStatus.textContent = 'La nota admite hasta 4000 caracteres.'; return; }
+      try { localStorage.setItem(NOTE_KEY, note.value); noteStatus.textContent = 'Nota guardada en este navegador.'; }
+      catch (error) { noteStatus.textContent = 'No se pudo guardar. El texto sigue aquí; conserva una copia.'; }
+    };
+    function description(code) {
+      if (code === 0) return 'Despejado';
+      if (code === 1 || code === 2) return 'Parcialmente nublado';
+      if (code === 3) return 'Nublado';
+      if (code === 45 || code === 48) return 'Neblina';
+      if (code >= 51 && code <= 57) return 'Llovizna';
+      if (code >= 61 && code <= 67 || code >= 80 && code <= 82) return 'Lluvia';
+      if (code >= 71 && code <= 77 || code === 85 || code === 86) return 'Nieve';
+      if (code >= 95 && code <= 99) return 'Tormenta';
+      return 'Condiciones variables';
+    }
+    function weather(body) {
+      var current = body && body.current;
+      if (!current || !finite(current.temperature_2m) || !finite(current.weather_code)) throw new Error('Datos de clima incompletos.');
+      setText('frame-weather-value', Math.round(current.temperature_2m) + ' °C');
+      setText('frame-weather-detail', description(current.weather_code));
+    }
+    function exchange(body) {
+      var buy = body && body.compra, sell = body && body.venta;
+      if (!buy || !sell || !finite(buy.valor) || !finite(sell.valor) || buy.valor <= 0 || sell.valor <= 0) throw new Error('Tipo de cambio incompleto.');
+      var stamp = typeof sell.fecha === 'string' && /^\d{4}-\d{2}-\d{2}$/.test(sell.fecha) ? ' · ' + sell.fecha : '';
+      setText('frame-exchange-value', '₡ ' + sell.valor.toFixed(2));
+      setText('frame-exchange-detail', '1 USD · Venta ' + sell.valor.toFixed(2) + ' · Compra ' + buy.valor.toFixed(2) + stamp);
+    }
+    function news(body) {
+      if (!body || Object.prototype.toString.call(body.hits) !== '[object Array]') throw new Error('Titulares incompletos.');
+      var fragment = document.createDocumentFragment(), count = 0, i, item, link, row, href;
+      for (i = 0; i < body.hits.length && i < 3; i++) {
+        item = body.hits[i];
+        if (!item || typeof item.title !== 'string' || !item.title) continue;
+        href = typeof item.url === 'string' && /^https?:\/\/[^\s]+$/i.test(item.url) && item.url.length <= 2048 ? item.url : '';
+        if (!href && (typeof item.objectID === 'string' || typeof item.objectID === 'number')) href = 'https://news.ycombinator.com/item?id=' + encodeURIComponent(String(item.objectID).slice(0,40));
+        if (!href) continue;
+        row = document.createElement('li'); link = document.createElement('a');
+        link.href = href; link.rel = 'noreferrer'; link.textContent = item.title.slice(0,180);
+        row.appendChild(link); fragment.appendChild(row); count++;
+      }
+      if (!count) throw new Error('No hay titulares disponibles.');
+      var list = document.getElementById('frame-news-list');
+      while (list.firstChild) list.removeChild(list.firstChild);
+      list.appendChild(fragment);
+    }
+    function request(job, done) {
+      var xhr, timer = 0, ended = false;
+      function finish(message) {
+        if (ended) return;
+        ended = true; clearTimeout(timer);
+        if (xhr) xhr.onload = xhr.onerror = xhr.ontimeout = xhr.onabort = xhr.onprogress = null;
+        setText(job.status, message); done();
+      }
+      function stop(message) {
+        if (ended) return;
+        if (xhr) xhr.onabort = null;
+        try { if (xhr) xhr.abort(); } catch (error) {}
+        finish(message);
+      }
+      try {
+        xhr = new XMLHttpRequest();
+        xhr.open('GET', job.url, true);
+        xhr.timeout = 6500;
+        xhr.onload = function () {
+          if (ended) return;
+          try {
+            if (xhr.status < 200 || xhr.status >= 300) throw new Error('Fuente no disponible.');
+            if (xhr.responseText.length > MAX_RESPONSE) throw new Error('Respuesta demasiado grande.');
+            job.apply(JSON.parse(xhr.responseText));
+            finish('Actualizado a las ' + document.getElementById('frame-clock-value').textContent + '.');
+          } catch (error) { finish('No se pudo actualizar. Pulsa Actualizar datos para reintentar.'); }
+        };
+        xhr.onprogress = function (event) {
+          if (event.loaded > MAX_RESPONSE || event.lengthComputable && event.total > MAX_RESPONSE) stop('Respuesta demasiado grande; consulta detenida.');
+        };
+        xhr.onerror = function () { finish('Sin conexión con esta fuente. Puedes reintentar.'); };
+        xhr.ontimeout = function () { stop('La fuente tardó demasiado. Puedes reintentar.'); };
+        xhr.onabort = function () { finish('Consulta interrumpida. Puedes reintentar.'); };
+        timer = setTimeout(function () { stop('La fuente tardó demasiado. Puedes reintentar.'); }, 7000);
+        xhr.send(null);
+      } catch (error) { finish('No se pudo consultar esta fuente. Puedes reintentar.'); }
+    }
+    function runNext() {
+      if (nextJob >= jobs.length) {
+        running = false; refresh.disabled = false; networkStatus.textContent = 'Consultas terminadas.'; return;
+      }
+      if (document.hidden) { paused = true; return; }
+      paused = false;
+      var job = jobs[nextJob++];
+      setText(job.status, 'Consultando esta fuente…');
+      request(job, function () { setTimeout(runNext, 250); });
+    }
+    function update() {
+      if (running) return;
+      clearTimeout(autoTimer); autoPending = false;
+      running = true; nextJob = 0; refresh.disabled = true;
+      networkStatus.textContent = 'Consultando una fuente a la vez…';
+      jobs = [
+        {url:'https://api.open-meteo.com/v1/forecast?latitude=9.93&longitude=-84.08&current=temperature_2m,weather_code&timezone=America%2FCosta_Rica&forecast_days=1',status:'frame-weather-status',apply:weather},
+        {url:'https://api.hacienda.go.cr/indicadores/tc/dolar',status:'frame-exchange-status',apply:exchange},
+        {url:'https://hn.algolia.com/api/v1/search?tags=front_page&hitsPerPage=3',status:'frame-news-status',apply:news}
+      ];
+      runNext();
+    }
+    clock(); setInterval(clock, 60000);
+    refresh.disabled = false; refresh.onclick = update;
+    document.addEventListener('visibilitychange', function () {
+      if (document.hidden) return;
+      clock();
+      if (autoPending) update();
+      else if (paused) runNext();
+    });
+    if (offlineStart) networkStatus.textContent = 'Consulta automática desactivada. Puedes actualizar manualmente.';
+    else {
+      networkStatus.textContent = 'La consulta comienza en unos segundos.';
+      autoTimer = setTimeout(function () { if (document.hidden) autoPending = true; else update(); }, 4000);
+    }
+    document.documentElement.setAttribute('data-frame-ready','20261105-frame2');
+  }());
+  </script>
+</body>
+</html>

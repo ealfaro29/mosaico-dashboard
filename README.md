@@ -77,6 +77,16 @@ Un error al abrir un widget no impide abrir los siguientes. Si no puede leerse o
 
 ## Verificación de regresiones
 
+### Vista independiente para el marco
+
+[Abrir `frame.html`](https://ealfaro29.github.io/mosaico-dashboard/frame.html?v=20261105-frame2). Es un documento autónomo de unos 15 KB: no carga los módulos, estilos, fuentes ni motor del dashboard. Los cinco widgets y enlaces de fuentes existen en el HTML incluso sin JavaScript. Usa script clásico, tipografía del sistema y CSS simple, sin Canvas, SVG, Intl, animaciones, transformaciones, filtros o sombras.
+
+El reloj se actualiza por minuto. Después de cuatro segundos consulta clima de San José, tipo de cambio y tres titulares, una fuente a la vez, con límites de 32 KB y siete segundos. No hace consultas periódicas. [Iniciar sin consultas automáticas](https://ealfaro29.github.io/mosaico-dashboard/frame.html?offline=1&v=20261105-frame2) conserva el botón para consultar manualmente.
+
+Las notas de esta vista se guardan explícitamente con **Guardar nota**, hasta 4000 caracteres, en `mosaico:frame:note:v1`. No lee, migra, enumera ni modifica las notas, configuración o caché del dashboard anterior. No redirige a otros usuarios ni reemplaza el dashboard. Una URL nueva y una prueba de navegador no demuestran que el cierre físico haya desaparecido.
+
+Prueba específica: `NODE_PATH=/tmp/mosaico-qa/node_modules node tests/frame-independent.cjs`. Cubre arranque sin JavaScript, independencia de recursos/API del dashboard, almacenamiento previo grande e intacto, recarga de notas propias, red secuencial y respuestas fallidas, bloqueadas o excesivas.
+
 El sitio no tiene dependencias de ejecución. La prueba opcional de navegador usa Playwright instalado fuera del proyecto:
 
 ```sh
