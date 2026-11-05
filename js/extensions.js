@@ -3,6 +3,8 @@
  * render({ widget, container, update, icon }). update mezcla datos en config;
  * devuelve una función de limpieza si usas timers o listeners externos.
  */
+import { uid } from './compat.js?v=20261105-frame1';
+
 const registry = new Map();
 
 export function registerWidget(definition) {
@@ -29,7 +31,6 @@ const button = (label, className = 'ext-button') => {
   node.type = 'button';
   return node;
 };
-const uid = () => globalThis.crypto?.randomUUID?.() || `${Date.now()}-${Math.random().toString(36).slice(2)}`;
 const safeUrl = value => {
   try {
     const parsed = new URL(value.trim());
@@ -117,14 +118,14 @@ registerWidget({
     const paint = () => {
       if (disposed) return;
       const value = Math.ceil(secondsLeft());
-      dial.textContent = `${String(Math.floor(value / 60)).padStart(2, '0')}:${String(value % 60).padStart(2, '0')}`;
-      toggle.textContent = startedAt ? 'Pausar' : value === 0 ? 'Otra sesión' : value === minutes * 60 ? 'Iniciar' : 'Continuar';
-      caption.textContent = value === 0 ? 'Sesión completa. Tómate un respiro.' : startedAt ? 'Este momento es para concentrarte.' : `${minutes} minutos, una sola cosa.`;
       if (value === 0 && startedAt) {
         remaining = 0;
         startedAt = null;
         persist();
       }
+      dial.textContent = `${String(Math.floor(value / 60)).padStart(2, '0')}:${String(value % 60).padStart(2, '0')}`;
+      toggle.textContent = startedAt ? 'Pausar' : value === 0 ? 'Otra sesión' : value === minutes * 60 ? 'Iniciar' : 'Continuar';
+      caption.textContent = value === 0 ? 'Sesión completa. Tómate un respiro.' : startedAt ? 'Este momento es para concentrarte.' : `${minutes} minutos, una sola cosa.`;
     };
     toggle.addEventListener('click', () => {
       if (startedAt) { remaining = secondsLeft(); startedAt = null; }
@@ -140,9 +141,12 @@ registerWidget({
     });
     actions.append(toggle, reset);
     container.append(dial, caption, actions);
-    const timer = setInterval(paint, 250);
+    const tick = () => { if (!document.hidden && startedAt) paint(); };
+    const resume = () => { if (!document.hidden) paint(); };
+    const timer = setInterval(tick, 1000);
+    document.addEventListener('visibilitychange', resume);
     paint();
-    return () => { disposed = true; clearInterval(timer); };
+    return () => { disposed = true; clearInterval(timer); document.removeEventListener('visibilitychange', resume); };
   }
 });
 

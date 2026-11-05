@@ -89,13 +89,27 @@ export function mountWeatherScene(card, data) {
   scene.dataset.period = day ? 'day' : 'night';
   scene.setAttribute('aria-hidden', 'true');
   Object.assign(scene.style, {position:'absolute',inset:'0',overflow:'hidden',borderRadius:'inherit',pointerEvents:'none',zIndex:'0'});
+  const colors = palettes[day ? 'day' : 'night'][kind];
+  scene.style.background = `linear-gradient(135deg, ${colors[0]}, ${colors[1]} 57%, ${colors[2]})`;
+  const reduced = window.matchMedia('(prefers-reduced-motion: reduce)');
+  // No canvas allocation, cloud textures, animation frames or resize listeners.
+  if (window.MosaicoRuntime?.lightweight || reduced.matches || typeof ResizeObserver !== 'function') {
+    scene.classList.add('weather-scene--static');
+    if (kind === 'clear' || kind === 'partly') {
+      const orb = document.createElement('span');orb.className = 'weather-static-orb';scene.append(orb);
+    }
+    if (kind !== 'clear') {
+      const cloud = document.createElement('span');cloud.className = 'weather-static-cloud';scene.append(cloud);
+    }
+    card.prepend(scene);
+    return () => scene.remove();
+  }
   const canvas = document.createElement('canvas');
   Object.assign(canvas.style, {display:'block',width:'100%',height:'100%'});
   scene.append(canvas); card.prepend(scene);
   const ctx = canvas.getContext('2d', { alpha: false });
   if (!ctx) { scene.style.background = palettes[day ? 'day' : 'night'][kind][1]; return () => scene.remove(); }
   const random = randomGenerator(7919 + Number(data.code || 0) * 131 + (day ? 19 : 83));
-  const reduced = window.matchMedia('(prefers-reduced-motion: reduce)');
   const clouds = [0, 1, 2].map(i => makeCloud(random, day, kind, i));
   const stars = Array.from({length:65}, () => ({x:random(),y:random() * .78,r:.35 + random() * .85,a:.2 + random() * .7,phase:random() * 6.28}));
   const precipitation = Array.from({length:kind === 'drizzle' ? 36 : kind === 'snow' ? 48 : 87}, () => ({x:random(),y:random(),z:.35 + random() * .65,phase:random() * 6.28}));
@@ -196,7 +210,7 @@ export function mountWeatherScene(card, data) {
 
   function frame(now) {
     if(disposed || document.hidden || reduced.matches){raf=0;return;}
-    if(now-lastFrame>=32){paint(now);lastFrame=now;}
+    if(now-lastFrame>=66){paint(now);lastFrame=now;}
     raf=requestAnimationFrame(frame);
   }
   function resume() {
@@ -206,7 +220,7 @@ export function mountWeatherScene(card, data) {
   }
   function resize() {
     if(disposed)return;
-    const rect=card.getBoundingClientRect();width=Math.max(1,rect.width);height=Math.max(1,rect.height);dpr=Math.min(window.devicePixelRatio||1,2);
+    const rect=card.getBoundingClientRect();width=Math.max(1,rect.width);height=Math.max(1,rect.height);dpr=Math.min(window.devicePixelRatio||1,1.5);
     canvas.width=Math.round(width*dpr);canvas.height=Math.round(height*dpr);paint(performance.now());
   }
   const observer=new ResizeObserver(resize);observer.observe(card);

@@ -29,20 +29,32 @@ function writeCache(key, value) {
 }
 
 async function requestJSON(url) {
-  const controller = new AbortController();
-  const timer = setTimeout(() => controller.abort(), TIMEOUT_MS);
+  const controller = typeof AbortController === 'function' ? new AbortController() : null;
+  let timer;
   try {
-    const response = await fetch(url, { signal: controller.signal, headers: { Accept: 'application/json' } });
-    if (!response.ok) throw new Error(`HTTP ${response.status}`);
-    const body = await response.json();
-    if (body.error) throw new Error('Respuesta no válida');
-    return body;
+    return await Promise.race([
+      (async () => {
+        const response = await fetch(url, { ...(controller ? {signal:controller.signal} : {}), headers:{Accept:'application/json'} });
+        if (!response.ok) throw new Error(`HTTP ${response.status}`);
+        const body = await response.json();
+        if (!body || body.error) throw new Error('Respuesta no válida');
+        return body;
+      })(),
+      new Promise((_, reject) => {timer=setTimeout(()=>{if(controller)controller.abort();reject(new Error('Tiempo de espera agotado'));},TIMEOUT_MS);}),
+    ]);
   } finally {
     clearTimeout(timer);
   }
 }
 
-async function networkOrCache(key, loader, message) {
+const inFlight = new Map();
+function networkOrCache(key, loader, message) {
+  if (inFlight.has(key)) return inFlight.get(key);
+  const request = loadOrCache(key, loader, message).finally(() => inFlight.delete(key));
+  inFlight.set(key, request);
+  return request;
+}
+async function loadOrCache(key, loader, message) {
   try {
     const data = await loader();
     const result = { data, fetchedAt: new Date().toISOString() };

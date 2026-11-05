@@ -7,7 +7,8 @@
   <meta name="description" content="Mosaico: tu dashboard modular de clima, noticias, tipo de cambio y widgets personales.">
   <title>Mosaico — Tu espacio, a tu ritmo</title>
   <link rel="icon" href="./assets/favicon.svg" type="image/svg+xml">
-  <link rel="stylesheet" href="./style.css">
+  <script src="./js/boot.js?v=20261105-frame1"></script>
+  <link rel="stylesheet" href="./style.css?v=20261105-frame1">
 </head>
 <body>
   <div class="app-shell" id="app">
@@ -33,7 +34,7 @@
         <div><div class="eyebrow">MENOS RUIDO. MÁS ESPACIO.</div><h1>Mi espacio<span class="heading-dot">.</span></h1></div>
         <div class="heading-actions"><button class="button edit-button" id="edit-button"><span data-icon="sliders"></span><span>Personalizar</span></button><button class="button primary" id="add-button"><span data-icon="plus"></span>Agregar widget</button></div>
       </header>
-      <section class="dashboard-scroll" aria-label="Tus widgets"><div class="widget-grid" id="widget-grid"></div></section>
+      <section class="dashboard-scroll" aria-label="Tus widgets"><p id="startup-status" hidden role="status">No pudimos iniciar Mosaico. <a href="?lite=1">Reintentar en modo ligero</a>. Tus datos guardados se conservan.</p><noscript>Activa JavaScript para ver tus widgets.</noscript><div class="widget-grid" id="widget-grid"></div></section>
       <footer><span><span class="status-dot"></span><span id="save-status">Todo en su lugar</span></span><span id="footer-date"></span></footer>
     </main>
   </div>
@@ -48,6 +49,6 @@
   <dialog id="settings-dialog" class="settings-dialog"><div class="dialog-header"><div><div class="eyebrow">TU ESPACIO</div><h2>Ajustes</h2></div><button class="icon-button close-dialog" aria-label="Cerrar" data-icon="x"></button></div><div class="settings-content"><div class="setting-info"><span data-icon="monitor"></span><div><strong>1024 × 640 píxeles</strong><p>El tamaño máximo de Mosaico. En pantalla completa, tu dashboard permanece centrado.</p></div></div><div class="setting-info"><span data-icon="hard-drive"></span><div><strong>Guardado en este navegador</strong><p>Tu distribución, notas y widgets se conservan en este dispositivo.</p></div></div><button class="button wide" id="export-button"><span data-icon="download"></span>Exportar mi espacio</button><label class="button wide import-button"><span data-icon="upload"></span>Importar un espacio<input type="file" id="import-input" accept="application/json,.json" hidden></label><button class="button wide danger" id="reset-button"><span data-icon="rotate"></span>Restablecer distribución inicial</button><p class="settings-note">Restablecer elimina los widgets y notas de este navegador. Puedes exportarlos antes.</p></div></dialog>
   <dialog id="about-dialog" class="settings-dialog"><div class="dialog-header"><div><div class="eyebrow">BIENVENIDO A MOSAICO</div><h2>Tu espacio, a tu ritmo.</h2></div><button class="icon-button close-dialog" aria-label="Cerrar" data-icon="x"></button></div><div class="settings-content about-content"><p>Una pequeña ventana para las cosas que importan. Agrega widgets, edita sus opciones y organiza tu día a tu manera.</p><p><strong>Para organizar:</strong> pulsa Personalizar. Arrastra las tarjetas o usa sus flechas para moverlas. Cada widget tiene un botón de ajustes.</p><p><strong>Datos:</strong> clima de <a href="https://open-meteo.com/" target="_blank" rel="noopener noreferrer">Open-Meteo</a>, cambio de <a href="https://api.hacienda.go.cr/docs/" target="_blank" rel="noopener noreferrer">Hacienda</a> y noticias de <a href="https://news.ycombinator.com/" target="_blank" rel="noopener noreferrer">Hacker News</a>. Cada módulo muestra su fuente y actualización.</p><p><strong>Widgets propios:</strong> puedes crear indicadores desde la biblioteca o registrar nuevos módulos en el código del proyecto.</p></div></dialog>
   <div class="toast" id="toast" role="status" aria-live="polite"></div>
-  <script type="module" src="./js/app.js"></script>
+  <script type="module" src="./js/app.js?v=20261105-frame1"></script>
 </body>
 </html>

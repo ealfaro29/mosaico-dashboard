@@ -1,14 +1,12 @@
-import { icon } from './icons.js';
-import { DEFAULT_LOCATION, fetchWeather, fetchExchange, fetchNews, searchCities, weatherDescription } from './data.js';
-import { getWidget, listWidgets } from './extensions.js';
-import { mountWeatherScene } from './weather-scene.js';
+import { icon } from './icons.js?v=20261105-frame1';
+import { DEFAULT_LOCATION, fetchWeather, fetchExchange, fetchNews, searchCities, weatherDescription } from './data.js?v=20261105-frame1';
+import { getWidget, listWidgets } from './extensions.js?v=20261105-frame1';
+import { mountWeatherScene } from './weather-scene.js?v=20261105-frame1';
+import { uid, clone, formatDate, costaRicaDate, pad } from './compat.js?v=20261105-frame1';
 
 const STORAGE_KEY = 'mosaico:space:v1';
-const TZ = 'America/Costa_Rica';
 const $ = selector => document.querySelector(selector);
 const esc = value => String(value ?? '').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
-const uid = () => crypto.randomUUID();
-const clone = value => structuredClone(value);
 const money = value => Number(value).toLocaleString('es-CR', {minimumFractionDigits:2, maximumFractionDigits:2});
 const builtins = [
   {type:'weather', name:'Clima', description:'Un vistazo al cielo, estés donde estés.', icon:'sun', accent:'sage', category:'daily', defaults:{location:DEFAULT_LOCATION}},
@@ -37,20 +35,30 @@ function validateSpace(raw) {
   })};
 }
 let storageAvailable = true;
-let state;
-try { const raw = localStorage.getItem(STORAGE_KEY); state = raw ? validateSpace(JSON.parse(raw)) : defaultSpace(); } catch { state = defaultSpace(); }
+let state, preservedSpace = null, storageReadFailed = false;
+try {
+  const raw = localStorage.getItem(STORAGE_KEY);
+  if (raw) {
+    try { state = validateSpace(JSON.parse(raw)); }
+    catch { preservedSpace = raw; state = defaultSpace(); }
+  } else state = defaultSpace();
+} catch { storageAvailable = false; storageReadFailed = true; state = defaultSpace(); }
 let editing = false, cleanups = [], draggedId = null, toastTimer, catalogCategory = 'all', lastRefresh = Date.now();
 const newsRequests = new WeakMap();
 function toast(message) { const node=$('#toast');node.textContent=message;node.classList.add('visible');clearTimeout(toastTimer);toastTimer=setTimeout(()=>node.classList.remove('visible'),3200); }
 function save() {
+  if (storageReadFailed) {storageAvailable=false;$('#save-status').textContent='No se pudo leer tu espacio · guardado en pausa';return;}
+  if (preservedSpace !== null) {
+    storageAvailable=false;$('#save-status').textContent='Espacio original protegido · exporta una copia desde Ajustes';return;
+  }
   try { localStorage.setItem(STORAGE_KEY,JSON.stringify(state));storageAvailable=true;$('#save-status').textContent='Guardado en este navegador'; }
   catch { storageAvailable=false;$('#save-status').textContent='Sin guardar · almacenamiento no disponible'; }
 }
 function updateConfig(widget, patch) { widget.config={...widget.config,...patch};save(); }
 function showDialog(id) { const d=$(id); if(!d.open)d.showModal(); }
 function sourceLine(result, name, url) {
-  const stamp=new Intl.DateTimeFormat('es-CR',{hour:'2-digit',minute:'2-digit',hour12:false,timeZone:TZ}).format(new Date(result.fetchedAt));
-  const day=new Intl.DateTimeFormat('es-CR',{day:'numeric',month:'short',timeZone:TZ}).format(new Date(result.fetchedAt));
+  const stamp=formatDate(new Date(result.fetchedAt),'time');
+  const day=formatDate(new Date(result.fetchedAt),'day');
   return `<p class="source-line"><a href="${url}" target="_blank" rel="noopener noreferrer">${name}</a><span class="tiny-dot"></span><span>${result.cached?'Caché · '+esc(day)+' · ':''}${stamp}</span></p>`;
 }
 function loading(container) { container.innerHTML='<div class="skeleton big"></div><div class="skeleton"></div><div class="skeleton short"></div>'; }
@@ -61,7 +69,7 @@ function cardTitle(w) {
   return ({news:'En el radar',clock:'Aquí y ahora',note:'Notas rápidas'})[w.type] || definition(w.type).name;
 }
 function render() {
-  cleanups.forEach(fn=>fn());cleanups=[];
+  cleanups.forEach(fn=>{try{fn();}catch(error){console.warn('No se pudo limpiar un widget',error);}});cleanups=[];
   const grid=$('#widget-grid');grid.replaceChildren();
   $('#app').classList.toggle('editing',editing);
   $('#edit-button').classList.toggle('selected',editing);
@@ -81,12 +89,14 @@ function render() {
     card.addEventListener('dragend',()=>{draggedId=null;document.querySelectorAll('.dragging,.drag-over').forEach(x=>x.classList.remove('dragging','drag-over'));});
     card.addEventListener('drop',event=>{event.preventDefault();if(!editing||!draggedId||draggedId===w.id)return;const from=state.widgets.findIndex(x=>x.id===draggedId);const to=state.widgets.findIndex(x=>x.id===w.id);if(from<0||to<0)return;state.widgets.splice(to,0,state.widgets.splice(from,1)[0]);draggedId=null;save();render();});
     const body=card.querySelector('.widget-body');
+    try {
     if(w.type==='weather')renderWeather(w,body);
     else if(w.type==='exchange')renderExchange(w,body);
     else if(w.type==='news')renderNews(w,body,card);
     else if(w.type==='clock')renderClock(w,body);
     else if(w.type==='note')renderNote(w,body);
-    else {try { const cleanup=def.render({widget:w,container:body,update:patch=>updateConfig(w,patch),icon});if(typeof cleanup==='function')cleanups.push(cleanup); } catch(error) {errorState(body,new Error('Este widget no pudo abrirse. Revisa su configuración.'),()=>openConfig(w));console.error(error);} }
+    else {const cleanup=def.render({widget:w,container:body,update:patch=>updateConfig(w,patch),icon});if(typeof cleanup==='function')cleanups.push(cleanup);}
+    } catch(error) {errorState(body,new Error('Este widget no pudo abrirse. Revisa su configuración.'),()=>openConfig(w));console.error(error);}
   });
   const add=document.createElement('button');add.className='add-tile';add.setAttribute('aria-label','Agregar un widget a mi espacio');add.innerHTML=`<div class="tile-art" aria-hidden="true"><span></span><span></span><span></span><span>${icon('plus')}</span></div><strong>Un espacio para tus ideas</strong><p>Hazlo tuyo con los widgets<br>que van contigo.</p><span class="add-small">${icon('plus')} Agregar widget</span>`;add.onclick=openCatalog;grid.append(add);
 }
@@ -97,7 +107,9 @@ async function renderWeather(w,container) {
     const result=await fetchWeather(w.config.location || DEFAULT_LOCATION);if(!container.isConnected)return;
     const d=result.data;
     container.innerHTML=`<div class="temperature">${Math.round(d.temperature)}<sup>°C</sup></div><p class="weather-description">${esc(weatherDescription(d.code))}</p><div class="weather-range">Máx. ${Math.round(d.high)}° <span>·</span> Mín. ${Math.round(d.low)}°</div><div class="weather-stats"><span>${icon('drop')}${Math.round(d.humidity)}% humedad</span><span>${icon('wind')}${Math.round(d.wind)} km/h</span></div>${sourceLine(result,'Open-Meteo','https://open-meteo.com/')}`;
-    const card=container.closest('.weather');card.classList.add('has-weather');cleanups.push(mountWeatherScene(card,d));
+    const card=container.closest('.weather');card.classList.add('has-weather');
+    // Decorative rendering must never replace successfully loaded weather data.
+    try {cleanups.push(mountWeatherScene(card,d));}catch(error){console.warn('Cielo estático: no se pudo iniciar la animación',error);}
   } catch(error) {if(container.isConnected)errorState(container,error,()=>renderWeather(w,container));}
 }
 async function renderExchange(w,container) {
@@ -132,7 +144,10 @@ async function renderNews(w,container,card) {
 }
 function renderClock(w,container) {
   container.classList.add('clock-body');container.innerHTML=`<div class="clock-time"><span class="clock-hm"></span><span class="clock-seconds"></span></div><p class="clock-period">El tiempo, a tu ritmo.</p><div class="clock-rule"></div><div class="clock-location">${icon('pin')} Costa Rica <span>· UTC −6</span></div><div class="clock-date"></div>`;
-  const tick=()=>{const now=new Date();const parts=new Intl.DateTimeFormat('es-CR',{timeZone:TZ,hour:'2-digit',minute:'2-digit',second:'2-digit',hourCycle:'h23'}).formatToParts(now);const val=t=>parts.find(p=>p.type===t)?.value || '00';container.querySelector('.clock-hm').textContent=`${val('hour')}:${val('minute')}`;container.querySelector('.clock-seconds').textContent=val('second');container.querySelector('.clock-date').textContent=new Intl.DateTimeFormat('es-CR',{timeZone:TZ,weekday:'long',day:'numeric',month:'long'}).format(now);};tick();const timer=setInterval(tick,1000);cleanups.push(()=>clearInterval(timer));
+  const hm=container.querySelector('.clock-hm'),seconds=container.querySelector('.clock-seconds'),date=container.querySelector('.clock-date');
+  let lastDay='';
+  const tick=()=>{if(document.hidden)return;const now=new Date(),local=costaRicaDate(now);hm.textContent=`${pad(local.getUTCHours())}:${pad(local.getUTCMinutes())}`;seconds.textContent=pad(local.getUTCSeconds());const day=local.toISOString().slice(0,10);if(day!==lastDay){date.textContent=formatDate(now,'date');lastDay=day;}};
+  tick();const timer=setInterval(tick,1000);document.addEventListener('visibilitychange',tick);cleanups.push(()=>{clearInterval(timer);document.removeEventListener('visibilitychange',tick);});
 }
 function renderNote(w,container) {
   container.innerHTML=`<textarea class="note-editor" aria-label="Contenido de ${esc(cardTitle(w))}" placeholder="Una idea suelta.\nAlgo por recordar.\nEste espacio es tuyo." maxlength="10000" spellcheck="true"></textarea><div class="note-bottom"><span>${icon('check')} <span class="note-save">Guardado para ti</span></span><span class="note-count"></span></div>`;
@@ -180,10 +195,13 @@ $('#settings-button').onclick=()=>showDialog('#settings-dialog');$('#about-butto
 $('#catalog-search').oninput=renderCatalog;document.querySelectorAll('[data-category]').forEach(b=>b.onclick=()=>{catalogCategory=b.dataset.category;document.querySelectorAll('[data-category]').forEach(x=>x.classList.toggle('selected',x===b));renderCatalog();});
 for(const button of document.querySelectorAll('.close-dialog'))button.onclick=()=>button.closest('dialog').close();
 for(const dialog of document.querySelectorAll('dialog'))dialog.addEventListener('click',e=>{if(e.target===dialog){const r=dialog.getBoundingClientRect();if(e.clientX<r.left||e.clientX>r.right||e.clientY<r.top||e.clientY>r.bottom)dialog.close();}});
-$('#export-button').onclick=()=>{const blob=new Blob([JSON.stringify(state,null,2)],{type:'application/json'});const url=URL.createObjectURL(blob);const a=document.createElement('a');a.href=url;a.download='mosaico-mi-espacio.json';a.click();setTimeout(()=>URL.revokeObjectURL(url),1000);toast('Tu espacio fue exportado');};
-$('#import-input').onchange=async e=>{const file=e.target.files[0];if(!file)return;try{if(file.size>1024*1024)throw new Error('El archivo debe pesar menos de 1 MB.');const imported=validateSpace(JSON.parse(await file.text()));if(!confirm('¿Reemplazar este espacio con el archivo seleccionado? Tus widgets y notas actuales se reemplazarán.'))return;state=imported;save();editing=false;render();$('#settings-dialog').close();toast('Tu espacio está listo');}catch(error){toast(error instanceof SyntaxError?'El archivo no contiene JSON válido.':error.message);}finally{e.target.value='';}};
-$('#reset-button').onclick=()=>{if(!confirm('¿Restablecer tu espacio? Se eliminarán tus widgets y notas actuales de este navegador.'))return;state=defaultSpace();editing=false;save();render();$('#settings-dialog').close();toast('Volviste al punto de partida');};
-function footerDate(){ $('#footer-date').textContent=new Intl.DateTimeFormat('es-CR',{timeZone:TZ,weekday:'short',day:'numeric',month:'short',year:'numeric'}).format(new Date()); }footerDate();setInterval(footerDate,60000);
+$('#export-button').onclick=()=>{let exported=preservedSpace;if(storageReadFailed){try{exported=localStorage.getItem(STORAGE_KEY);}catch{return toast('No se pudo leer tu espacio. Intenta exportarlo de nuevo.');}}const blob=new Blob([exported ?? JSON.stringify(state,null,2)],{type:'application/json'});const url=URL.createObjectURL(blob);const a=document.createElement('a');a.href=url;a.download='mosaico-mi-espacio.json';a.click();setTimeout(()=>URL.revokeObjectURL(url),1000);toast('Tu espacio fue exportado');};
+$('#import-input').onchange=async e=>{const file=e.target.files[0];if(!file)return;try{if(file.size>1024*1024)throw new Error('El archivo debe pesar menos de 1 MB.');const imported=validateSpace(JSON.parse(await file.text()));if(!confirm('¿Reemplazar este espacio con el archivo seleccionado? Tus widgets y notas actuales se reemplazarán.'))return;state=imported;preservedSpace=null;storageReadFailed=false;save();editing=false;render();$('#settings-dialog').close();toast('Tu espacio está listo');}catch(error){toast(error instanceof SyntaxError?'El archivo no contiene JSON válido.':error.message);}finally{e.target.value='';}};
+$('#reset-button').onclick=()=>{if(!confirm('¿Restablecer tu espacio? Se eliminarán tus widgets y notas actuales de este navegador.'))return;state=defaultSpace();preservedSpace=null;storageReadFailed=false;editing=false;save();render();$('#settings-dialog').close();toast('Volviste al punto de partida');};
+function footerDate(){if(!document.hidden)$('#footer-date').textContent=formatDate(new Date(),'footer');}footerDate();setInterval(footerDate,60000);
 setInterval(()=>{if(!document.hidden&&!document.querySelector('dialog[open]')&&!editing&&document.activeElement?.tagName!=='TEXTAREA'&&document.activeElement?.tagName!=='INPUT'){lastRefresh=Date.now();render();}},15*60*1000);
 document.addEventListener('visibilitychange',()=>{if(!document.hidden&&Date.now()-lastRefresh>15*60*1000&&!document.querySelector('dialog[open]')){lastRefresh=Date.now();render();}});
 render();save();
+document.documentElement.dataset.mosaicoReady='true';
+$('#startup-status').hidden=true;
+if(preservedSpace!==null)toast('Tu espacio original está protegido. Exporta una copia desde Ajustes antes de recuperarlo.');

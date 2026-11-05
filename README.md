@@ -65,7 +65,28 @@ Los widgets incluidos son pendientes, temporizador de foco, enlaces e indicador 
 
 GitHub Pages puede servir esta carpeta directamente desde la raíz de una rama. Los archivos usan rutas relativas para funcionar también bajo la ruta de un repositorio. No incluyas credenciales ni datos privados en los archivos publicados.
 
-El clima tiene un cielo animado según el código WMO y el indicador real de día/noche: sol, luna, estrellas, nubosidad, lluvia, llovizna, neblina, nieve y tormenta. Las animaciones respetan la preferencia de movimiento reducido y se pausan con la pestaña en segundo plano.
+El clima tiene un cielo según el código WMO y el indicador real de día/noche. En equipos normales se anima; en modo ligero y con movimiento reducido utiliza un fondo estático sin Canvas. El reloj reutiliza formateadores, los temporizadores no pintan en segundo plano y las consultas simultáneas a una misma fuente se comparten.
+
+## Marcos Android y modo ligero
+
+Android 9 o anterior y dispositivos que reportan 2 GB de memoria o menos activan el modo ligero **antes de cargar el CSS**: fuentes del sistema, cielo estático, sin texturas Canvas, animaciones, filtros de hover ni desenfoque de diálogos. La distribución, colores y funciones se conservan. Puedes forzarlo en cualquier equipo con [Mosaico ligero](https://ealfaro29.github.io/mosaico-dashboard/?lite=1).
+
+Las fuentes externas son opcionales y se solicitan después de iniciar el documento en el modo normal; no bloquean el arranque. Los identificadores y las copias de datos JSON tienen alternativas sin `crypto.randomUUID` ni `structuredClone`. Esto endurece el arranque; no implica que Firefox 159 carezca de esas funciones.
+
+Un error al abrir un widget no impide abrir los siguientes. Si no puede leerse o validarse el espacio guardado, Mosaico mantiene el original sin sobrescribirlo: muestra un aviso y permite exportarlo desde Ajustes. Importar o restablecer conserva la confirmación de reemplazo. Si el módulo inicial no llega a arrancar, aparece un enlace de reintento ligero a los ocho segundos.
+
+## Verificación de regresiones
+
+El sitio no tiene dependencias de ejecución. La prueba opcional de navegador usa Playwright instalado fuera del proyecto:
+
+```sh
+npm install --prefix /tmp/mosaico-qa --no-audit --no-fund playwright
+NODE_PATH=/tmp/mosaico-qa/node_modules node tests/frame-smoke.cjs
+```
+
+En macOS usa el Chrome instalado. En otros equipos instala Chromium con Playwright. Para Firefox, instala su binario y usa `MOSAICO_BROWSER=firefox`. La prueba crea un servidor local y guarda resultados/capturas en `.qa/`, que no se publica en git. Incluye perfil Android 8.1 a 1024 × 640, arranque sin APIs opcionales, cero Canvas/fuentes externas en modo ligero, datos sin conexión y peticiones bloqueadas, fallos aislados, preservación exacta de notas/IDs/orden, configuración, exportación e importación y recuperación del arranque.
+
+El perfil Android simulado no sustituye una prueba en el marco físico ni demuestra la causa de un cierre nativo del navegador.
 
 ## Publicación
 
